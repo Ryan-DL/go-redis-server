@@ -4,12 +4,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Ryan-DL/go-redis-server/util"
+	"github.com/Ryan-DL/go-redis-server/response"
 )
 
 func (ch *CommandHandler) HandleSet() {
 	if len(ch.Command) < 3 {
-		util.SendError(ch.Conn, "Not enough arguments. Expected SET key value")
+		response.SendError(ch.Conn, "Not enough arguments. Expected SET key value")
 	}
 
 	key := ch.Command[1]
@@ -27,7 +27,7 @@ func (ch *CommandHandler) HandleSet() {
 		last := ch.Command[len(ch.Command)-1]
 		secondsToAdd, err := strconv.ParseInt(last, 10, 64)
 		if err != nil {
-			util.SendError(ch.Conn, "Unable to parse requested expiration")
+			response.SendError(ch.Conn, "Unable to parse requested expiration")
 			return
 		}
 		expirey := time.Duration(secondsToAdd) * time.Second
@@ -36,5 +36,5 @@ func (ch *CommandHandler) HandleSet() {
 		ch.MemoryStore.Set(key, value, 0)
 	}
 
-	util.SendSimpleString(ch.Conn, "OK")
+	response.SendSimpleString(ch.Conn, "OK")
 }

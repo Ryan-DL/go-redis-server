@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/Ryan-DL/go-redis-server/util"
+	"github.com/Ryan-DL/go-redis-server/response"
 )
 
 func (ch *CommandHandler) HandleInfo() {
@@ -15,5 +15,5 @@ total_keys: %d
 		len(ch.MemoryStore.GetKeys()),
 	)
 
-	util.SendBulkString(ch.Conn, info)
+	response.SendBulkString(ch.Conn, info)
 }

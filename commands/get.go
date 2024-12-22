@@ -1,12 +1,10 @@
 package commands
 
-import (
-	"github.com/Ryan-DL/go-redis-server/util"
-)
+import "github.com/Ryan-DL/go-redis-server/response"
 
 func (ch *CommandHandler) HandleGet() {
 	if len(ch.Command) < 2 {
-		util.SendError(ch.Conn, "Not enough arguments. Expected GET key")
+		response.SendError(ch.Conn, "Not enough arguments. Expected GET key")
 		return
 	}
 
@@ -14,9 +12,9 @@ func (ch *CommandHandler) HandleGet() {
 
 	value, ok := ch.MemoryStore.Get(key)
 	if !ok {
-		util.SendNullString(ch.Conn)
+		response.SendNullString(ch.Conn)
 		return
 	}
 
-	util.SendBulkString(ch.Conn, value)
+	response.SendBulkString(ch.Conn, value)
 }

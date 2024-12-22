@@ -3,12 +3,12 @@ package commands
 import (
 	"time"
 
-	"github.com/Ryan-DL/go-redis-server/util"
+	"github.com/Ryan-DL/go-redis-server/response"
 )
 
 func (ch *CommandHandler) HandleRename() {
 	if len(ch.Command) < 3 {
-		util.SendError(ch.Conn, "Not enough arguments. Expected RENAME key newkey")
+		response.SendError(ch.Conn, "Not enough arguments. Expected RENAME key newkey")
 		return
 	}
 
@@ -18,7 +18,7 @@ func (ch *CommandHandler) HandleRename() {
 	// retrieve the key's value and ensure it exists
 	value, exists := ch.MemoryStore.Get(key)
 	if !exists {
-		util.SendError(ch.Conn, "ERR no such key")
+		response.SendError(ch.Conn, "ERR no such key")
 		return
 	}
 
@@ -36,5 +36,5 @@ func (ch *CommandHandler) HandleRename() {
 
 	ch.MemoryStore.Delete(key)
 
-	util.SendSimpleString(ch.Conn, "OK")
+	response.SendSimpleString(ch.Conn, "OK")
 }

@@ -3,12 +3,12 @@ package commands
 import (
 	"time"
 
-	"github.com/Ryan-DL/go-redis-server/util"
+	"github.com/Ryan-DL/go-redis-server/response"
 )
 
 func (ch *CommandHandler) HandleAppend() {
 	if len(ch.Command) < 3 {
-		util.SendError(ch.Conn, "Not enough arguments. Expected APPEND key value")
+		response.SendError(ch.Conn, "Not enough arguments. Expected APPEND key value")
 		return
 	}
 
@@ -20,7 +20,7 @@ func (ch *CommandHandler) HandleAppend() {
 
 	if !exists {
 		ch.MemoryStore.Set(key, appendValue, 0) // No expiration for a new key
-		util.SendInteger(ch.Conn, len(appendValue))
+		response.SendInteger(ch.Conn, len(appendValue))
 		return
 	}
 
@@ -35,5 +35,5 @@ func (ch *CommandHandler) HandleAppend() {
 		ch.MemoryStore.Set(key, newValue, 0)
 	}
 
-	util.SendInteger(ch.Conn, len(newValue))
+	response.SendInteger(ch.Conn, len(newValue))
 }

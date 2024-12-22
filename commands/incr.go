@@ -4,12 +4,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Ryan-DL/go-redis-server/util"
+	"github.com/Ryan-DL/go-redis-server/response"
 )
 
 func (ch *CommandHandler) HandleIncr() {
 	if len(ch.Command) < 2 {
-		util.SendError(ch.Conn, "Not enough arguments. Expected INCR key")
+		response.SendError(ch.Conn, "Not enough arguments. Expected INCR key")
 		return
 	}
 
@@ -19,14 +19,14 @@ func (ch *CommandHandler) HandleIncr() {
 	if !exists {
 		// create new key and initialize it to 0 and increment
 		ch.MemoryStore.Set(key, "1", 0) // no expiration for a new key
-		util.SendInteger(ch.Conn, 1)
+		response.SendInteger(ch.Conn, 1)
 		return
 	}
 
 	// check we're dealing with an integer
 	currentInt, err := strconv.ParseInt(currentValue, 10, 64)
 	if err != nil {
-		util.SendError(ch.Conn, "ERR value is not an integer or out of range")
+		response.SendError(ch.Conn, "ERR value is not an integer or out of range")
 		return
 	}
 
@@ -40,5 +40,5 @@ func (ch *CommandHandler) HandleIncr() {
 		ch.MemoryStore.Set(key, strconv.FormatInt(newValue, 10), 0) // no expiration
 	}
 
-	util.SendInteger(ch.Conn, int(newValue))
+	response.SendInteger(ch.Conn, int(newValue))
 }

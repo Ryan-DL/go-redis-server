@@ -10,12 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Ryan-DL/go-redis-server/cache"
 	"github.com/Ryan-DL/go-redis-server/commands"
 	"github.com/Ryan-DL/go-redis-server/config"
-	"github.com/Ryan-DL/go-redis-server/util"
+	"github.com/Ryan-DL/go-redis-server/response"
 )
 
-func handleConnection(conn net.Conn, memoryStore *util.ValueStore, password string) {
+func handleConnection(conn net.Conn, memoryStore *cache.ValueStore, password string) {
 	defer func() {
 		log.Printf("Closing connection from %s", conn.RemoteAddr())
 		conn.Close()
@@ -35,20 +36,20 @@ func handleConnection(conn net.Conn, memoryStore *util.ValueStore, password stri
 		}
 
 		if prefix != '*' { // all redis commands are of an array type
-			util.SendError(conn, "Protocol error: expected '*', got '"+string(prefix)+"'")
+			response.SendError(conn, "Protocol error: expected '*', got '"+string(prefix)+"'")
 			return
 		}
 
 		// extract number of args
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			util.SendError(conn, "Protocol error: unable to read array length for command")
+			response.SendError(conn, "Protocol error: unable to read array length for command")
 			return
 		}
 		line = strings.TrimSpace(line)
 		numArgs, err := strconv.Atoi(line)
 		if err != nil {
-			util.SendError(conn, "Protocol error: invalid array length")
+			response.SendError(conn, "Protocol error: invalid array length")
 			return
 		}
 
@@ -56,23 +57,23 @@ func handleConnection(conn net.Conn, memoryStore *util.ValueStore, password stri
 		for i := 0; i < numArgs; i++ {
 			bulkPrefix, err := reader.ReadByte()
 			if err != nil {
-				util.SendError(conn, "Protocol error: unable to read bulk string prefix")
+				response.SendError(conn, "Protocol error: unable to read bulk string prefix")
 				return
 			}
 			if bulkPrefix != '$' {
-				util.SendError(conn, "Protocol error: expected '$', got '"+string(bulkPrefix)+"'")
+				response.SendError(conn, "Protocol error: expected '$', got '"+string(bulkPrefix)+"'")
 				return
 			}
 
 			bulkLenStr, err := reader.ReadString('\n')
 			if err != nil {
-				util.SendError(conn, "Protocol error: unable to read bulk string length")
+				response.SendError(conn, "Protocol error: unable to read bulk string length")
 				return
 			}
 			bulkLenStr = strings.TrimSpace(bulkLenStr)
 			bulkLen, err := strconv.Atoi(bulkLenStr)
 			if err != nil {
-				util.SendError(conn, "Protocol error: invalid bulk string length")
+				response.SendError(conn, "Protocol error: invalid bulk string length")
 				return
 			}
 
@@ -80,7 +81,7 @@ func handleConnection(conn net.Conn, memoryStore *util.ValueStore, password stri
 			buf := make([]byte, bulkLen+2) // +2 for \r\n
 			_, err = io.ReadFull(reader, buf)
 			if err != nil {
-				util.SendError(conn, "Protocol error: unable to read bulk string")
+				response.SendError(conn, "Protocol error: unable to read bulk string")
 				return
 			}
 			arg := string(buf[:bulkLen])
@@ -92,13 +93,13 @@ func handleConnection(conn net.Conn, memoryStore *util.ValueStore, password stri
 			if len(command) == 2 && strings.ToUpper(command[0]) == "AUTH" {
 				if command[1] == password {
 					authenticated = true
-					util.SendSimpleString(conn, "OK")
+					response.SendSimpleString(conn, "OK")
 				} else {
-					util.SendError(conn, "ERR invalid password")
+					response.SendError(conn, "ERR invalid password")
 				}
 				continue
 			} else {
-				util.SendError(conn, "NOAUTH Authentication required.")
+				response.SendError(conn, "NOAUTH Authentication required.")
 				continue
 			}
 		}
@@ -139,14 +140,14 @@ func handleCommand(cmd *commands.CommandHandler) {
 	case "INFO":
 		cmd.HandleInfo()
 	default:
-		util.SendError(cmd.Conn, "Unknown command: "+command)
+		response.SendError(cmd.Conn, "Unknown command: "+command)
 	}
 }
 
 func main() {
 	cfg := config.LoadConfig()
 
-	memoryStore := util.NewValueStore(10 * time.Second)
+	memoryStore := cache.NewValueStore(10 * time.Second)
 
 	var port string
 	if cfg.RedisPort != nil {
