@@ -55,11 +55,16 @@ func (kv *ValueStore) Get(key string) (string, bool) {
 	return value, exists
 }
 
-func (kv *ValueStore) Delete(key string) {
+func (kv *ValueStore) Delete(key string) bool {
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
-	delete(kv.store, key)
-	delete(kv.expiration, key)
+
+	_, exists := kv.store[key]
+	if exists {
+		delete(kv.store, key)
+		delete(kv.expiration, key)
+	}
+	return exists
 }
 
 func (kv *ValueStore) startCleanup(interval time.Duration) {
@@ -75,4 +80,30 @@ func (kv *ValueStore) startCleanup(interval time.Duration) {
 		}
 		kv.mu.Unlock()
 	}
+}
+
+func (kv *ValueStore) GetExpiry(key string) (time.Time, bool) {
+	kv.mu.RLock()
+	defer kv.mu.RUnlock()
+
+	exp, exists := kv.expiration[key]
+	if !exists || exp == 0 {
+		return time.Time{}, false // No expiration set or key does not exist
+	}
+
+	return time.Unix(0, exp), true
+}
+
+func (kv *ValueStore) GetKeys() []string {
+	kv.mu.RLock()
+	defer kv.mu.RUnlock()
+	keys := make([]string, 0, len(kv.store))
+	now := time.Now().UnixNano()
+	for key, exp := range kv.expiration {
+		if exp > 0 && now > exp {
+			continue
+		}
+		keys = append(keys, key)
+	}
+	return keys
 }

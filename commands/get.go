@@ -14,7 +14,7 @@ func (ch *CommandHandler) HandleGet() {
 
 	value, ok := ch.MemoryStore.Get(key)
 	if !ok {
-		util.SendError(ch.Conn, "Key not found or expired")
+		util.SendNullString(ch.Conn)
 		return
 	}
 

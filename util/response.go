@@ -73,6 +73,11 @@ func SendError(conn net.Conn, msg string) {
 	writeResponse(conn, response)
 }
 
+func SendInteger(conn net.Conn, value int) {
+	response := IntegerType(value)
+	writeResponse(conn, response)
+}
+
 func SendBulkString(conn net.Conn, msg string) {
 	response := BulkStringType(msg)
 	writeResponse(conn, response)
