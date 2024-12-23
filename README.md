@@ -1,6 +1,6 @@
 # Go Redis Server
 
-A weekend project implementing an in-memory RESP2-compliant Redis server in Go. Implementation tested against the official `go-redis` client. 
+A weekend project implementing a partial, in-memory RESP2-compliant Redis server in Go. Implementation tested against the official `go-redis` client. 
 
 ## Build and Execute
 
