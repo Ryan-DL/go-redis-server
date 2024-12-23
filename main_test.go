@@ -13,8 +13,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-// NOTE:
-// THIS TEST WILL ONLY WORK IF YOU HAVE BUILT THE IMAGE LOCALLY
+// This is an integration test for our built docker container and expected Redis functionality is all working.  
 
 var (
 	redisContainer testcontainers.Container
